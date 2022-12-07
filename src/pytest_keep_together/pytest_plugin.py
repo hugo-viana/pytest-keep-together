@@ -3,8 +3,9 @@
 import logging
 from dataclasses import dataclass, field
 from inspect import getmodule
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 
+from _pytest.doctest import DoctestItem
 from _pytest.python import Function
 
 logger = logging.getLogger(__name__)
@@ -12,10 +13,10 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class Item:
-    """Pytest test item (with custom attributes for keep_together plugin."""
+    """Pytest test item (with custom attributes for keep-together plugin."""
 
-    item: Function
-    module: Any = field(init=False)
+    item: Union[Function, DoctestItem]
+    module_name: str = field(init=False)
     group: Optional[str] = field(init=False, default=None)
     cls_name: Optional[str] = field(init=False, default=None)
 
@@ -27,20 +28,46 @@ class Item:
 
         """
         # Save module attr
-        self.module = getmodule(self.item._obj)
+        self.module_name = self.get_item_module_name()
 
         # Exit if not a 'keep_together' marked test
         if self.check_keep_together() is False:
             return self
 
         # Save class attr (if it's a method and not a independent function)
-        try:
-            self.cls_name = self.item._obj.__self__.__class__.__qualname__
-        except AttributeError:
-            pass
+        if isinstance(self.item, Function):
+            try:
+                self.cls_name = self.item._obj.__self__.__class__.__qualname__
+            except AttributeError:
+                pass
 
         logger.debug(f"New 'keep_together' item discovered: {self!s}")
         return self
+
+    def get_item_module_name(self) -> str:
+        """Get item module name according to item type.
+
+        Returns:
+            str: item module name.
+
+        """
+
+        if isinstance(self.item, Function):
+            module = getmodule(self.item._obj)
+            if module is not None:
+                return module.__name__
+
+        if isinstance(self.item, DoctestItem):
+            doctest = self.item.dtest
+            if doctest is not None:
+                return str(doctest.globs["__name__"])
+
+        logger.warn(
+            "keep-together plugin can only infer types: "
+            "'_pytest.python.Function' and '_pytest.doctest.DoctestItem'."
+            f"type detected: {type(self.item)}",
+        )
+        return ""
 
     def check_keep_together(self) -> bool:
         """Check if item is a 'keep_together' test and store specific attrs.
@@ -78,7 +105,7 @@ class Item:
             str: string representation of Item.
 
         """
-        txt_repr = str(self.module.__name__)
+        txt_repr = str(self.module_name)
         if self.group:
             txt_repr += f"::{self.group}"
         if self.cls_name:
@@ -104,8 +131,8 @@ class Item:
         other_group_str = other.group or ""
         self_cls_name = self.cls_name or ""
         other_cls_name = other.cls_name or ""
-        self_module_name = self.module.__name__ or ""
-        other_module_name = other.module.__name__ or ""
+        self_module_name = self.module_name or ""
+        other_module_name = other.module_name or ""
 
         # Calculate __lt__ by parts
         group_lt = self_group_str < other_group_str
@@ -116,7 +143,10 @@ class Item:
         return any([group_lt, cls_name_lt, module_name_lt])
 
 
-def pytest_collection_modifyitems(config: Any, items: List[Function]) -> None:
+def pytest_collection_modifyitems(
+    config: Any,
+    items: List[Union[Function, DoctestItem]],
+) -> None:
     """Alter pytest collection of item tests (ordering).
 
     Args:
