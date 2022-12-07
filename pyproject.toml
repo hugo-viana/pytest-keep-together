@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pytest-keep-together"
+version = "1.0.0"
+authors = [
+  { name="Hugo Viana", email="hugosemianoviana@gmail.com" },
+]
+description = "Pytest plugin to customize test ordering by running all 'related' tests together"
+readme = "README.md"
+requires-python = ">=3.7"
+dependencies = [
+    "pytest",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Framework :: Pytest",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development",
+]
+
+[project.entry-points.pytest11]
+pytest-keep-together = "pytest_keep_together.pytest_plugin"
+
+[project.urls]
+"Homepage" = "https://github.com/hugo-viana/pytest-keep-together"
+"Bug Tracker" = "https://github.com/hugo-viana/pytest-keep-together/issues"

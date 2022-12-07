@@ -1,0 +1,21 @@
+[flake8]
+exclude = build, .git, .tox, conftest.py, venv, .venv, .venv, docs/conf.py
+max-line-length = 79
+application_import_names = pytest_keep_together
+rst-roles =
+	class,
+	attr,
+	meth,
+	func,
+extend-ignore =
+	RST201,RST203,RST301,RST210,RST213,
+	D412, D202,
+	ANN101, ANN102,
+per-file-ignores =
+	tests/*:
+	D100, D101, D104, N801, ECE001,
+	ANN001, ANN002, ANN003, ANN201, ANN202, ANN203, ANN204, ANN205, ANN206,
+	ANN301
+
+[darglint]
+docstring_style = google
