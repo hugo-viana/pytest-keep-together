@@ -1,3 +1,3 @@
 """pytest-keep-together plugin top package."""
 
-__VERSION__ = "1.0.0"
+__VERSION__ = "1.0.1"
