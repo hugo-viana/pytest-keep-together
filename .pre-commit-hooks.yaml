@@ -1,0 +1,7 @@
+- id: pre-commit-msg
+  name: Pre Commit Message
+  entry: pre-commit-msg
+  language: python
+  description: Pre-Commit Hook enforcing validation rules on the commit msg
+  always_run: true
+  stages: [commit-msg]
